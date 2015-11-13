@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart", "table"]});
+      google.setOnLoadCallback(drawCharts);
+      function drawCharts() {
+
+        var pie_data = google.visualization.arrayToDataTable([
+          ['Version', 'Instances'],
+{% for v, c in versions.iteritems() %}
+          ['{{ v|e }}', {{ c|e }}],
+{% endfor %}
+        ]);
+
+        var pie_options = {
+          title: 'StoRM installed versions',
+          pieHole: 0.4,
+        };
+
+        var pie_chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        pie_chart.draw(pie_data, pie_options);
+
+        var table_data = new google.visualization.DataTable();
+        table_data.addColumn('string', 'Site');
+        table_data.addColumn('number', 'Instances');
+        table_data.addRows([
+{% for d,v in domains.iteritems() %}
+          ['{{ d }}', {{ v.instances }} ],
+{% endfor %}
+        ]);
+
+        var table_options = {
+          showRowNumber: true,
+          width: '100%',
+          eight: '100%'
+        }
+
+        var table_chart = new google.visualization.Table(document.getElementById('tablechart'));
+
+        table_chart.draw(table_data, table_options);
+
+      }
+    </script>
+  </head>
+  <body>
+    <div id="tablechart" style="width: 900px; margin: 20px auto;"></div>
+    <div id="piechart" style="width: 900px; height: 500px; margin: 20px auto;"></div>
+  </body>
+</html>

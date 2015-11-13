@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart", "table"]});
+      google.setOnLoadCallback(drawCharts);
+      function drawCharts() {
+
+        var pie_data = google.visualization.arrayToDataTable([
+          ['Version', 'Instances'],
+          ['1.11.9', 25],
+          ['1.11.8', 10],
+          ['1.11.7', 4],
+        ]);
+
+        var pie_options = {
+          title: 'StoRM installed versions',
+          pieHole: 0.4,
+        };
+
+        var pie_chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        pie_chart.draw(pie_data, pie_options);
+
+        var table_data = new google.visualization.DataTable();
+        table_data.addColumn('string', 'Site');
+        table_data.addColumn('number', 'Instances');
+        table_data.addRows([
+          ['INFN-T1', 5 ],
+          ['egee.irb.hr', 1 ],
+          ['GR-04-FORTH-ICS', 1 ],
+          ['WEIZMANN-LCG2', 1 ],
+          ['INFN-COSENZA', 1 ],
+          ['UKI-SOUTHGRID-SUSX', 2 ],
+          ['INFN-FERRARA', 1 ],
+          ['INFN-MILANO-ATLASC', 1 ],
+          ['INFN-TRIESTE', 1 ],
+          ['INFN-MIB', 1 ],
+          ['LIP-Lisbon', 1 ],
+          ['CA-MCGILL-CLUMEQ-T2', 2 ],
+          ['CRS4', 1 ],
+          ['egee.srce.hr', 1 ],
+          ['TECHNION-HEP', 1 ],
+          ['BIOCOMP', 1 ],
+          ['RUG-CIT', 1 ],
+          ['INFN-BOLOGNA', 1 ],
+          ['INFN-PISA', 2 ],
+          ['mainzgrid', 1 ],
+          ['JP-KEK-CRC-02', 1 ],
+          ['Australia-ATLAS', 1 ],
+          ['IL-TAU-HEP', 1 ],
+          ['CYFRONET-LCG2', 1 ],
+          ['UA-NSCMBR', 1 ],
+          ['LIP-Coimbra', 1 ],
+          ['IGI-BOLOGNA', 1 ],
+          ['UKI-LT2-QMUL', 5 ],
+          ['INFN-TORINO', 1 ],
+        ]);
+
+        var table_options = {
+          showRowNumber: true,
+          width: '100%',
+          eight: '100%'
+        }
+
+        var table_chart = new google.visualization.Table(document.getElementById('tablechart'));
+
+        table_chart.draw(table_data, table_options);
+
+      }
+    </script>
+  </head>
+  <body>
+    <div id="tablechart" style="width: 900px; margin: 20px auto;"></div>
+    <div id="piechart" style="width: 900px; height: 500px; margin: 20px auto;"></div>
+  </body>
+</html>
