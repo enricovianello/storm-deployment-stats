@@ -8,8 +8,8 @@
 
         var pie_data = google.visualization.arrayToDataTable([
           ['Version', 'Instances'],
-{% for v, c in versions.iteritems() %}
-          ['{{ v|e }}', {{ c|e }}],
+{% for version,count in versions.iteritems() %}
+          ['{{ version|e }} [{{ count }}]', {{ count|e }}],
 {% endfor %}
         ]);
 
@@ -23,11 +23,14 @@
         pie_chart.draw(pie_data, pie_options);
 
         var table_data = new google.visualization.DataTable();
-        table_data.addColumn('string', 'Site');
-        table_data.addColumn('number', 'Instances');
+        table_data.addColumn('string', 'Domain');
+        table_data.addColumn('string', 'Hostname');
+        table_data.addColumn('string', 'Version');
         table_data.addRows([
-{% for d,v in domains.iteritems() %}
-          ['{{ d }}', {{ v.instances }} ],
+{% for domain,hostnames in domains.iteritems() %}
+{% for hostname,version in hostnames.iteritems() %}
+          ['{{domain}}', '{{hostname}}', '{{version}}' ],
+{% endfor %}
 {% endfor %}
         ]);
 

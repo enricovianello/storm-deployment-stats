@@ -53,66 +53,40 @@ except ldap.LDAPError, e:
 baseDN = "GLUE2GroupID=grid,o=glue"
 searchScope = ldap.SCOPE_SUBTREE
 
-#### QUERY 1
-
-## retrieve all attributes - again adjust to your needs - see documentation for more options
-retrieveAttributes = ["GLUE2ServiceAdminDomainForeignKey"]
-searchFilter = "GLUE2ServiceType=storm"
-
-result_set = ldapQuery(baseDN, searchScope, retrieveAttributes, searchFilter)
-
-domains = dict()
-count = 0
-for i in range(len(result_set)):
-	for entry in result_set[i]:
-		dn = entry[0]
-		domain = entry[1]['GLUE2ServiceAdminDomainForeignKey'][0]
-		count += 1
-		# print "%d.\nDn: %s\nDomain: %s\n" % (count, dn, domain)
-		if domain in domains:
-			domains[domain]["instances"] += 1
-		else:
-			domains[domain] = dict()
-			domains[domain]["instances"] = 1
-			domains[domain]["versions"] = dict()
-
-#### QUERY 2
-
 ## retrieve all attributes - again adjust to your needs - see documentation for more options
 retrieveAttributes = ["GLUE2ManagerProductVersion"]
 searchFilter = "GLUE2ManagerProductName=StoRM"
 
 result_set = ldapQuery(baseDN, searchScope, retrieveAttributes, searchFilter)
 
+domains = dict()
 versions = dict()
 
-count = 0
+n = len("/storage")
+
 for i in range(len(result_set)):
 	for entry in result_set[i]:
 		dn = entry[0]
 		version = entry[1]['GLUE2ManagerProductVersion'][0]
 		domain = dn.split(',')[3].split('=')[1]
-		count += 1
-		# print "%d.\nDn: %s\nVersion: %s\nDomain: %s" % (count, dn, version, domain)
-		if domain in domains:
-			if version in domains[domain]["versions"]:
-				domains[domain]["versions"][version] += 1
-			else:
-				domains[domain]["versions"][version] = dict()
-				domains[domain]["versions"][version] = 1
-		else:
-			print "Domain " + domain + " not in list!!! "
+		hostname = dn.split(",")[1].split("=")[1][:-n]
+		#print "%d.\nDn: %s\nDomain: %s\nHostname: %s\nVersion: %s" % (i+1, dn, domain, hostname, version)
+
+		if not domain in domains:
+			domains[domain] = dict()
+		domains[domain][hostname] = version
 
 		if version in versions:
 			versions[version] += 1
 		else:
 			versions[version] = 1
 
-tot_istances = count
+tot_istances = len(result_set)
 
-print "\n%-20s\t%-10s\t%-30s" % ("Site", "Instances", "Versions")
-for domain, data in domains.iteritems():
-    print "%-20s\t%-10s\t%-30s" % (domain, str(data["instances"]), data["versions"])
+print "\n%-25s\t%-25s\t%-10s" % ("Domain", "Hostname", "Version")
+for domain, hosts in sorted(domains.items()):
+	for host, version in sorted(hosts.items()):
+		print "%-25s\t%-25s\t%-10s" % (domain, host, version)
 
 print "\n## Summary ##"
 print "Total sites: %d" % (len(domains))

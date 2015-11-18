@@ -8,9 +8,9 @@
 
         var pie_data = google.visualization.arrayToDataTable([
           ['Version', 'Instances'],
-          ['1.11.9', 25],
-          ['1.11.8', 10],
-          ['1.11.7', 4],
+          ['1.11.9 [26]', 26],
+          ['1.11.8 [10]', 10],
+          ['1.11.7 [4]', 4],
         ]);
 
         var pie_options = {
@@ -23,38 +23,50 @@
         pie_chart.draw(pie_data, pie_options);
 
         var table_data = new google.visualization.DataTable();
-        table_data.addColumn('string', 'Site');
-        table_data.addColumn('number', 'Instances');
+        table_data.addColumn('string', 'Domain');
+        table_data.addColumn('string', 'Hostname');
+        table_data.addColumn('string', 'Version');
         table_data.addRows([
-          ['INFN-T1', 5 ],
-          ['egee.irb.hr', 1 ],
-          ['GR-04-FORTH-ICS', 1 ],
-          ['WEIZMANN-LCG2', 1 ],
-          ['INFN-COSENZA', 1 ],
-          ['UKI-SOUTHGRID-SUSX', 2 ],
-          ['INFN-FERRARA', 1 ],
-          ['INFN-MILANO-ATLASC', 1 ],
-          ['INFN-TRIESTE', 1 ],
-          ['INFN-MIB', 1 ],
-          ['LIP-Lisbon', 1 ],
-          ['CA-MCGILL-CLUMEQ-T2', 2 ],
-          ['CRS4', 1 ],
-          ['egee.srce.hr', 1 ],
-          ['TECHNION-HEP', 1 ],
-          ['BIOCOMP', 1 ],
-          ['RUG-CIT', 1 ],
-          ['INFN-BOLOGNA', 1 ],
-          ['INFN-PISA', 2 ],
-          ['mainzgrid', 1 ],
-          ['JP-KEK-CRC-02', 1 ],
-          ['Australia-ATLAS', 1 ],
-          ['IL-TAU-HEP', 1 ],
-          ['CYFRONET-LCG2', 1 ],
-          ['UA-NSCMBR', 1 ],
-          ['LIP-Coimbra', 1 ],
-          ['IGI-BOLOGNA', 1 ],
-          ['UKI-LT2-QMUL', 5 ],
-          ['INFN-TORINO', 1 ],
+          ['INFN-T1', 'vm-storage-06.cr.cnaf.infn.it', '1.11.9' ],
+          ['INFN-T1', 'storm-cms.cr.cnaf.infn.it', '1.11.8' ],
+          ['INFN-T1', 'storm-lhcb.cr.cnaf.infn.it', '1.11.9' ],
+          ['INFN-T1', 'storm-archive.cr.cnaf.infn.it', '1.11.9' ],
+          ['INFN-T1', 'storm-atlas.cr.cnaf.infn.it', '1.11.9' ],
+          ['egee.irb.hr', 'lorienmaster.irb.hr', '1.11.9' ],
+          ['GR-04-FORTH-ICS', 'grid002.ics.forth.gr', '1.11.9' ],
+          ['WEIZMANN-LCG2', 'wipp-se.weizmann.ac.il', '1.11.7' ],
+          ['INFN-COSENZA', 'linucs-se-01.cs.infn.it', '1.11.9' ],
+          ['UKI-SOUTHGRID-SUSX', 'grid-storm.hpc.susx.ac.uk', '1.11.9' ],
+          ['UKI-SOUTHGRID-SUSX', 'grid-storm-02.hpc.susx.ac.uk', '1.11.9' ],
+          ['INFN-FERRARA', 'grid2.fe.infn.it', '1.11.9' ],
+          ['INFN-MILANO-ATLASC', 'storm-be.mi.infn.it', '1.11.9' ],
+          ['INFN-TRIESTE', 'gridsrm.ts.infn.it', '1.11.9' ],
+          ['INFN-MIB', 'storm.mib.infn.it', '1.11.8' ],
+          ['LIP-Lisbon', 'srm01.lip.pt', '1.11.8' ],
+          ['CA-MCGILL-CLUMEQ-T2', 'storm02.clumeq.mcgill.ca', '1.11.9' ],
+          ['CA-MCGILL-CLUMEQ-T2', 'gridftp02.clumeq.mcgill.ca', '1.11.9' ],
+          ['CRS4', 'egridglitese.crs4.it', '1.11.7' ],
+          ['egee.srce.hr', 'se.srce.egi.cro-ngi.hr', '1.11.8' ],
+          ['TECHNION-HEP', 'tech-se.hep.technion.ac.il', '1.11.9' ],
+          ['BIOCOMP', 'duck-03.biocomp.unibo.it', '1.11.9' ],
+          ['RUG-CIT', 'srm.target.rug.nl', '1.11.9' ],
+          ['INFN-BOLOGNA', 'bostorm.bo.infn.it', '1.11.8' ],
+          ['INFN-PISA', 'gridsrm.pi.infn.it', '1.11.7' ],
+          ['INFN-PISA', 'stormbe1.pi.infn.it', '1.11.7' ],
+          ['KR-UOS-SSCC', 'uosaf0007.sscc.uos.ac.kr', '1.11.9' ],
+          ['mainzgrid', 'mgse1.physik.uni-mainz.de', '1.11.8' ],
+          ['JP-KEK-CRC-02', 'kek2-se01.cc.kek.jp', '1.11.9' ],
+          ['Australia-ATLAS', 'rcsrm.atlas.unimelb.edu.au', '1.11.9' ],
+          ['IL-TAU-HEP', 'tau-se.hep.tau.ac.il', '1.11.9' ],
+          ['CYFRONET-LCG2', 'storm.grid.cyf-kr.edu.pl', '1.11.9' ],
+          ['LIP-Coimbra', 'storm.gridc.lip.pt', '1.11.8' ],
+          ['IGI-BOLOGNA', 'darkstorm.cnaf.infn.it', '1.11.8' ],
+          ['UKI-LT2-QMUL', 'se01.esc.qmul.ac.uk', '1.11.9' ],
+          ['UKI-LT2-QMUL', 'se02.esc.qmul.ac.uk', '1.11.9' ],
+          ['UKI-LT2-QMUL', 'se03.esc.qmul.ac.uk', '1.11.9' ],
+          ['UKI-LT2-QMUL', 'se04.esc.qmul.ac.uk', '1.11.8' ],
+          ['UKI-LT2-QMUL', 'se05.esc.qmul.ac.uk', '1.11.8' ],
+          ['INFN-TORINO', 'se-srm-00.to.infn.it', '1.11.9' ],
         ]);
 
         var table_options = {
