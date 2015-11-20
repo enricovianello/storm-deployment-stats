@@ -8,7 +8,7 @@
 
         var pie_data = google.visualization.arrayToDataTable([
           ['Version', 'Instances'],
-{% for version,count in versions.iteritems() %}
+{% for version,count in stats.getStormVersions()|dictsort|reverse %}
           ['{{ version|e }} [{{ count }}]', {{ count|e }}],
 {% endfor %}
         ]);
@@ -26,11 +26,21 @@
         table_data.addColumn('string', 'Domain');
         table_data.addColumn('string', 'Hostname');
         table_data.addColumn('string', 'Version');
+        table_data.addColumn('string', 'WebDAV-URL');
+        table_data.addColumn('string', 'WebDAV-Version');
+        table_data.addColumn('string', 'SRM-URL');
+        table_data.addColumn('string', 'SRM-Version');
+        table_data.addColumn('string', 'Glue2');
+        table_data.addColumn('string', 'Glue1');
+
         table_data.addRows([
-{% for domain,hostnames in domains.iteritems() %}
-{% for hostname,version in hostnames.iteritems() %}
-          ['{{domain}}', '{{hostname}}', '{{version}}' ],
-{% endfor %}
+{% for site in sites %}
+  {% for host in site.getHosts() %}
+    ["{{site.getName()}}", "{{host.getHostname()}}", "{{host.getVersion()}}",
+    {% if host.getDAVEndpoint() is none %} , {% else %} "{{host.getDAVEndpoint().getURL()}}", "{{host.getDAVEndpoint().getVersion()}}" {% endif %},
+    {% if host.getSRMEndpoint() is none %} , {% else %} "{{host.getSRMEndpoint().getURL()}}", "{{host.getSRMEndpoint().getVersion()}}" {% endif %},
+    "{{host.isGlue2()}}", "{{host.isGlue1()}}"],
+  {% endfor %}
 {% endfor %}
         ]);
 
@@ -48,7 +58,7 @@
     </script>
   </head>
   <body>
-    <div id="tablechart" style="width: 900px; margin: 20px auto;"></div>
+    <div id="tablechart" style="width: 100%; margin: 20px auto;"></div>
     <div id="piechart" style="width: 900px; height: 500px; margin: 20px auto;"></div>
   </body>
 </html>
