@@ -202,178 +202,6 @@ def glue1Find(connection, retrieveAttributes, searchFilter):
 	searchScope = ldap.SCOPE_SUBTREE
 	return ldapQuery(connection, baseDN, searchScope, retrieveAttributes, searchFilter)
 
-# init variables
-
-sites = []
-stats = Stats()
-
-# Open LDAP connection
-ldapConnection = openLDAPConnection("egee-bdii.cnaf.infn.it", 2170)
-
-## GLUE2 QUERY: find all StoRM sites and backend hostnames
-result_set = glue2Find(ldapConnection, [], "GLUE2ServiceType=storm")
-
-n = len("/storage")
-
-for i in range(len(result_set)):
-	for entry in result_set[i]:
-		dn = entry[0]
-		domain = dn.split(',')[2].split('=')[1].upper()
-		hostname = dn.split(",")[0].split("=")[1][:-n]
-		#print "%d.\tDomain: %-20s\tHostname: %-30s" % (i+1, domain, hostname)
-
-		site = findSite(sites, domain)
-		if site is None:
-			site = Site(domain)
-			sites.append(site)
-			# UPDATE stats
-			stats.incSites()
-
-		host = findHost(site.getHosts(), hostname)
-		if host is None:
-			host = Host(hostname, "-")
-			host.setGlue2()
-			site.addHost(host)
-			# UPDATE stats
-			stats.incHosts()
-
-## GLUE2 QUERY: find all hostname versions
-result_set = glue2Find(ldapConnection, ["GLUE2ManagerProductVersion"], "GLUE2ManagerProductName=StoRM")
-
-for i in range(len(result_set)):
-	for entry in result_set[i]:
-		dn = entry[0]
-		domain = dn.split(',')[3].split('=')[1].upper()
-		version = entry[1]['GLUE2ManagerProductVersion'][0]
-		hostname = dn.split(",")[1].split("=")[1][:-n]
-		#print "%d.\tDomain: %-20s\tHostname: %-30s\tVersion: %-10s" % (i+1, domain, hostname, version)
-
-		# UPDATE sites
-		site = findSite(sites, domain)
-		if site is None:
-			print "Site %s not found!! ERROR!" % (domain)
-			continue
-		host = findHost(site.getHosts(), hostname)
-		if host is None:
-			print "Hostname %s not found in %s!! ERROR!" % (hostname, domain)
-			continue
-		host.setVersion(version)
-
-		# UPDATE stats
-		stats.incStormVersions(version)
-
-## GLUE2 QUERY: find all webdav endpoints
-result_set = glue2Find(ldapConnection, ["GLUE2EndpointURL", "GLUE2EndpointImplementationVersion"], \
-	"(&(GLUE2EndpointInterfaceName=webdav)(GLUE2EndpointID=*HTTPS))")
-
-for i in range(len(result_set)):
-	for entry in result_set[i]:
-		dn = entry[0]
-		domain = dn.split(',')[3].split('=')[1].upper()
-		hostname = dn.split(",")[1].split("=")[1][:-n]
-		URL = entry[1]['GLUE2EndpointURL'][0]
-		version = entry[1]['GLUE2EndpointImplementationVersion'][0]
-		#print "%d.\tDomain: %-20s\tHostname: %-30s\tURL: %-50s\tVersion: %-10s" % (i+1, domain, hostname, URL, version)
-
-		# UPDATE sites
-		site = findSite(sites, domain)
-		if site is None:
-			print "Site %s not found!! ERROR!" % (domain)
-			continue
-		host = findHost(site.getHosts(), hostname)
-		if host is None:
-			print "Hostname %s not found in %s!! ERROR!" % (hostname, domain)
-			continue
-		host.addDAVEndpoint(Endpoint("webdav", URL, version))
-
-## GLUE2 QUERY: find all SRM endpoints
-result_set = glue2Find(ldapConnection, ["GLUE2EndpointURL", "GLUE2EndpointImplementationVersion"], \
-	"(&(GLUE2EndpointInterfaceName=SRM)(GLUE2EndpointID=*/storage/endpoint/SRM))")
-
-for i in range(len(result_set)):
-	for entry in result_set[i]:
-		dn = entry[0]
-		domain = dn.split(',')[3].split('=')[1].upper()
-		hostname = dn.split(",")[1].split("=")[1][:-n]
-		URL = entry[1]['GLUE2EndpointURL'][0]
-		version = entry[1]['GLUE2EndpointImplementationVersion'][0]
-		#print "%d.\tDomain: %-20s\tHostname: %-30s\tURL: %-60s\tVersion: %-10s" % (i+1, domain, hostname, URL, version)
-
-		# UPDATE sites
-		site = findSite(sites, domain)
-		if site is None:
-			print "Site %s not found!! ERROR!" % (domain)
-			continue
-		host = findHost(site.getHosts(), hostname)
-		if host is None:
-			print "Hostname %s not found in %s!! ERROR!" % (hostname, domain)
-			continue
-		host.addSRMEndpoint(Endpoint("srm", URL, version))
-
-## GLUE1 QUERY: find all StoRM sites and backend hostnames
-result_set = glue1Find(ldapConnection, ["GlueInformationServiceURL", "GlueSEUniqueID", \
-	"GlueSEImplementationVersion"], "GlueSEImplementationName=StoRM")
-
-for i in range(len(result_set)):
-	for entry in result_set[i]:
-		dn = entry[0]
-		version = entry[1]['GlueSEImplementationVersion'][0]
-		domain = dn.split(',')[1].split('=')[1].upper()
-		hostname = entry[1]['GlueInformationServiceURL'][0].split("/")[2].split(":")[0]
-		#print "%d.\tDomain: %-20s\tHostname: %-30s\tVersion: %-10s" % (i+1, domain, hostname, version)
-
-		# UPDATE sites
-		site = findSite(sites, domain)
-		if site is None:
-			site = Site(domain)
-			host = Host(hostname,version)
-			host.setGlue1()
-			site.addHost(host)
-			sites.append(site)
-			#UPDATE stats
-			stats.incStormVersions(version)
-			stats.incSites()
-			continue
-
-		host = findHost(site.getHosts(), hostname)
-		if host is None:
-			host = Host(hostname,version)
-			host.setGlue1()
-			site.addHost(host)
-			#UPDATE stats
-			stats.incStormVersions(version)
-			stats.incHosts()
-			continue
-
-		host.setGlue1()
-
-sites.sort(key=lambda site: site.getName())
-
-print "\n%-18s\t%-25s\t%-10s\t%-50s\t%-10s\t%-60s\t%-10s\t%-6s\t%-6s" % \
-	("Domain", "Hostname", "Version",  "WebDAV URL",  "WebDAV version", \
-		"SRM URL",  "SRM version", "Glue2", "Glue1")
-
-for site in sites:
-	for host in site.getHosts():
-		print "%-18s\t%-25s\t%-10s\t%-50s\t%-10s\t%-60s\t%-10s\t%-6r\t%-6r" % \
-			(site.getName(), host.getHostname(), host.getVersion(), \
-				"-" if host.getDAVEndpoint() is None else host.getDAVEndpoint().getURL(), \
-				"-" if host.getDAVEndpoint() is None else host.getDAVEndpoint().getVersion(), \
-				"-" if host.getSRMEndpoint() is None else host.getSRMEndpoint().getURL(), \
-				"-" if host.getSRMEndpoint() is None else host.getSRMEndpoint().getVersion(), \
-				host.isGlue2(), host.isGlue1())
-
-print "\n## Summary ##"
-print "Total sites: %d" % (stats.getNumSites())
-print "Total instances: %d" % (stats.getNumHosts())
-print "Versions:"
-for version,count in sorted(stats.getStormVersions().items(), reverse = True):
-	print "\t%s [%d instances]" % (version, count)
-print ""
-
-# Capture our current directory
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-
 def generate_report_html(stats, sites):
 	j2_env = Environment(loader=FileSystemLoader(THIS_DIR), trim_blocks=True)
 	out_file = open("report.html","w")
@@ -395,8 +223,188 @@ def generate_site_list_txt(sites):
 	out_file.close()
 	print "Report generated: report.txt"
 
+def printSitesTable(sites):
+
+	print "\n%-18s\t%-25s\t%-10s\t%-50s\t%-10s\t%-60s\t%-10s\t%-6s\t%-6s" % \
+		("Domain", "Hostname", "Version",  "WebDAV URL",  "WebDAV version", \
+			"SRM URL",  "SRM version", "Glue2", "Glue1")
+
+	for site in sites:
+		for host in site.getHosts():
+			print "%-18s\t%-25s\t%-10s\t%-50s\t%-10s\t%-60s\t%-10s\t%-6r\t%-6r" % \
+				(site.getName(), host.getHostname(), host.getVersion(), \
+					"-" if host.getDAVEndpoint() is None else host.getDAVEndpoint().getURL(), \
+					"-" if host.getDAVEndpoint() is None else host.getDAVEndpoint().getVersion(), \
+					"-" if host.getSRMEndpoint() is None else host.getSRMEndpoint().getURL(), \
+					"-" if host.getSRMEndpoint() is None else host.getSRMEndpoint().getVersion(), \
+					host.isGlue2(), host.isGlue1())
+
+def printStatsSummary(stats):
+
+	print "\n## Summary ##"
+	print "Total sites: %d" % (stats.getNumSites())
+	print "Total instances: %d" % (stats.getNumHosts())
+	print "Versions:"
+	for version,count in sorted(stats.getStormVersions().items(), reverse = True):
+		print "\t%s [%d instances]" % (version, count)
+	print ""
+
 
 if __name__ == '__main__':
+
+	# init variables
+	sites = []
+	stats = Stats()
+
+	# Open LDAP connection
+	ldapConnection = openLDAPConnection("egee-bdii.cnaf.infn.it", 2170)
+
+	## GLUE2 QUERY: find all StoRM sites and backend hostnames
+	result_set = glue2Find(ldapConnection, [], "GLUE2ServiceType=storm")
+
+	n = len("/storage")
+
+	for i in range(len(result_set)):
+		for entry in result_set[i]:
+			dn = entry[0]
+			domain = dn.split(',')[2].split('=')[1].upper()
+			hostname = dn.split(",")[0].split("=")[1][:-n]
+			#print "%d.\tDomain: %-20s\tHostname: %-30s" % (i+1, domain, hostname)
+
+			site = findSite(sites, domain)
+			if site is None:
+				site = Site(domain)
+				sites.append(site)
+				# UPDATE stats
+				stats.incSites()
+
+			host = findHost(site.getHosts(), hostname)
+			if host is None:
+				host = Host(hostname, "-")
+				host.setGlue2()
+				site.addHost(host)
+				# UPDATE stats
+				stats.incHosts()
+
+	## GLUE2 QUERY: find all hostname versions
+	result_set = glue2Find(ldapConnection, ["GLUE2ManagerProductVersion"], "GLUE2ManagerProductName=StoRM")
+
+	for i in range(len(result_set)):
+		for entry in result_set[i]:
+			dn = entry[0]
+			domain = dn.split(',')[3].split('=')[1].upper()
+			version = entry[1]['GLUE2ManagerProductVersion'][0]
+			hostname = dn.split(",")[1].split("=")[1][:-n]
+			#print "%d.\tDomain: %-20s\tHostname: %-30s\tVersion: %-10s" % (i+1, domain, hostname, version)
+
+			# UPDATE sites
+			site = findSite(sites, domain)
+			if site is None:
+				print "Site %s not found!! ERROR!" % (domain)
+				continue
+			host = findHost(site.getHosts(), hostname)
+			if host is None:
+				print "Hostname %s not found in %s!! ERROR!" % (hostname, domain)
+				continue
+			host.setVersion(version)
+
+			# UPDATE stats
+			stats.incStormVersions(version)
+
+	## GLUE2 QUERY: find all webdav endpoints
+	result_set = glue2Find(ldapConnection, ["GLUE2EndpointURL", "GLUE2EndpointImplementationVersion"], \
+		"(&(GLUE2EndpointInterfaceName=webdav)(GLUE2EndpointID=*HTTPS))")
+
+	for i in range(len(result_set)):
+		for entry in result_set[i]:
+			dn = entry[0]
+			domain = dn.split(',')[3].split('=')[1].upper()
+			hostname = dn.split(",")[1].split("=")[1][:-n]
+			URL = entry[1]['GLUE2EndpointURL'][0]
+			version = entry[1]['GLUE2EndpointImplementationVersion'][0]
+			#print "%d.\tDomain: %-20s\tHostname: %-30s\tURL: %-50s\tVersion: %-10s" % (i+1, domain, hostname, URL, version)
+
+			# UPDATE sites
+			site = findSite(sites, domain)
+			if site is None:
+				print "Site %s not found!! ERROR!" % (domain)
+				continue
+			host = findHost(site.getHosts(), hostname)
+			if host is None:
+				print "Hostname %s not found in %s!! ERROR!" % (hostname, domain)
+				continue
+			host.addDAVEndpoint(Endpoint("webdav", URL, version))
+
+	## GLUE2 QUERY: find all SRM endpoints
+	result_set = glue2Find(ldapConnection, ["GLUE2EndpointURL", "GLUE2EndpointImplementationVersion"], \
+		"(&(GLUE2EndpointInterfaceName=SRM)(GLUE2EndpointID=*/storage/endpoint/SRM))")
+
+	for i in range(len(result_set)):
+		for entry in result_set[i]:
+			dn = entry[0]
+			domain = dn.split(',')[3].split('=')[1].upper()
+			hostname = dn.split(",")[1].split("=")[1][:-n]
+			URL = entry[1]['GLUE2EndpointURL'][0]
+			version = entry[1]['GLUE2EndpointImplementationVersion'][0]
+			#print "%d.\tDomain: %-20s\tHostname: %-30s\tURL: %-60s\tVersion: %-10s" % (i+1, domain, hostname, URL, version)
+
+			# UPDATE sites
+			site = findSite(sites, domain)
+			if site is None:
+				print "Site %s not found!! ERROR!" % (domain)
+				continue
+			host = findHost(site.getHosts(), hostname)
+			if host is None:
+				print "Hostname %s not found in %s!! ERROR!" % (hostname, domain)
+				continue
+			host.addSRMEndpoint(Endpoint("srm", URL, version))
+
+	## GLUE1 QUERY: find all StoRM sites and backend hostnames
+	result_set = glue1Find(ldapConnection, ["GlueInformationServiceURL", "GlueSEUniqueID", \
+		"GlueSEImplementationVersion"], "GlueSEImplementationName=StoRM")
+
+	for i in range(len(result_set)):
+		for entry in result_set[i]:
+			dn = entry[0]
+			version = entry[1]['GlueSEImplementationVersion'][0]
+			domain = dn.split(',')[1].split('=')[1].upper()
+			hostname = entry[1]['GlueInformationServiceURL'][0].split("/")[2].split(":")[0]
+			#print "%d.\tDomain: %-20s\tHostname: %-30s\tVersion: %-10s" % (i+1, domain, hostname, version)
+
+			# UPDATE sites
+			site = findSite(sites, domain)
+			if site is None:
+				site = Site(domain)
+				host = Host(hostname,version)
+				host.setGlue1()
+				site.addHost(host)
+				sites.append(site)
+				#UPDATE stats
+				stats.incStormVersions(version)
+				stats.incSites()
+				continue
+
+			host = findHost(site.getHosts(), hostname)
+			if host is None:
+				host = Host(hostname,version)
+				host.setGlue1()
+				site.addHost(host)
+				#UPDATE stats
+				stats.incStormVersions(version)
+				stats.incHosts()
+				continue
+
+			host.setGlue1()
+
+	# order site by name
+	sites.sort(key=lambda site: site.getName())
+
+	printSitesTable(sites)
+	printStatsSummary(stats)
+
+	# Capture our current directory
+	THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
 	generate_report_html(stats, sites)
 	generate_report_csv(sites)
 	generate_site_list_txt(sites)
